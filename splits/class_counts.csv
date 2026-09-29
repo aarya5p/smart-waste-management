@@ -1,0 +1,8 @@
+,original,removed,train,val,test
+cardboard,403,2,281,60,60
+glass,501,3,348,75,75
+metal,410,5,283,61,61
+paper,594,19,402,86,87
+plastic,482,4,335,71,72
+trash,137,0,96,21,20
+TOTAL,2527,33,1745,374,375

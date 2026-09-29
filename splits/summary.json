@@ -1,0 +1,14 @@
+{
+  "data_dir": "data/raw/trashnet",
+  "seed": 42,
+  "threshold": 5,
+  "images_found": 2527,
+  "corrupt": 0,
+  "duplicate_pairs": 28,
+  "cross_class_groups": 5,
+  "removed": 33,
+  "final": 2494,
+  "train": 1745,
+  "val": 374,
+  "test": 375
+}

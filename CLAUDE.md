@@ -59,4 +59,7 @@ is evaluated on real-world images, and runs on a Raspberry Pi that indicates the
 
 ## Current status
 (update this section as phases finish)
-- Phase 1: script written, not yet run on real TrashNet
+- Phase 1: done. TrashNet dataset-resized downloaded into data/raw/trashnet/ (2527 images,
+  matches expected total). Ran src/prepare_trashnet.py with defaults (seed 42, threshold 5) ->
+  splits/{train,val,test}.csv committed. 33 images dropped (28 same-class duplicate groups,
+  5 cross-class label-conflict groups); 0 corrupt files. Final counts: train 1745 / val 374 / test 375.
