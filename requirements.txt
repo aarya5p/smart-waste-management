@@ -1,0 +1,16 @@
+torch==2.14.0
+torchvision==0.29.0
+timm==1.0.30
+ultralytics==8.4.165
+imagehash==4.3.2
+pillow==12.3.0
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+matplotlib==3.11.2
+seaborn==0.13.2
+opencv-python==5.0.0.93
+pycocotools==2.0.11
+grad-cam==1.5.7
+fvcore==0.1.5.post20221221
+scipy==1.18.1
