@@ -32,6 +32,11 @@ is evaluated on real-world images, and runs on a Raspberry Pi that indicates the
 1. Never re-split data. Always read splits/*.csv. Existing splits were made by src/prepare_trashnet.py (seed 42).
 2. Test sets (TrashNet test split, my real-world test set) are NEVER used for training, tuning,
    early stopping or model selection. Validation set only for those.
+   ALL decisions are made from validation results only: hyperparameters, which models to
+   fine-tune, which model to deploy, and anything else that changes the system. Test results
+   are ONLY reported in the final tables - they never cause anything to change. If a test
+   number makes a choice look wrong, the choice still stands; that is the point of the rule.
+   Every run is scored on both splits, into results/<run_name>/val/ and results/<run_name>/test/.
 3. Photos of the same physical object must all be in the same split.
 4. Augmentation only on the training set. Val/test: resize + ImageNet normalization only.
 5. Fixed seeds everywhere. Every classifier config is run with seeds 42, 56, 99.
@@ -59,6 +64,11 @@ is evaluated on real-world images, and runs on a Raspberry Pi that indicates the
 
 ## Current status
 (update this section as phases finish)
+- Phase 2: in progress. src/train_classifier.py and src/evaluate.py written and smoke-tested on
+  CPU (all 5 architectures build in both frozen/finetune modes); no real training run yet.
+  notebooks/colab_train_classifier.ipynb + docs/COLAB.md added for GPU training on Colab.
+  TACO repo cloned and all 1500 images downloaded (data/raw/taco/, 2.5 GB, 0 corrupt);
+  src/taco_categories.py -> docs/taco_categories.csv (60 categories, 4784 annotations).
 - Phase 1: done. TrashNet dataset-resized downloaded into data/raw/trashnet/ (2527 images,
   matches expected total). Ran src/prepare_trashnet.py with defaults (seed 42, threshold 5) ->
   splits/{train,val,test}.csv committed. 33 images dropped (28 same-class duplicate groups,

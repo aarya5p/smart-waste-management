@@ -1,27 +1,6 @@
 """
 prepare_trashnet.py
 Clean, deduplicate and split the TrashNet dataset.
-
-What it does
-  1. Scans <data_dir>/<class_name>/*.jpg (TrashNet's "dataset-resized" layout).
-  2. Drops unreadable / corrupt images.
-  3. Finds near-duplicates with perceptual hashing (pHash + Hamming distance).
-       - same-class duplicates  -> keep one image, drop the rest
-       - cross-class duplicates -> drop ALL images in the group (label conflict)
-  4. Saves side-by-side previews of every duplicate pair so you can check them.
-  5. Makes a stratified 70/15/15 train/val/test split with a fixed seed.
-  6. Writes train.csv, val.csv, test.csv (columns: filepath,label) with paths
-     RELATIVE to data_dir, so the same CSVs work on your laptop and on Colab.
-
-Usage
-  python prepare_trashnet.py --data_dir data/raw/trashnet/dataset-resized --out_dir splits
-
-  After looking at the previews in splits/duplicate_review/, if some flagged
-  pairs are NOT real duplicates, list one of their file paths per line
-  (relative paths, exactly as in duplicates.csv) in a text file and re-run:
-  python prepare_trashnet.py ... --keep keep.txt
-
-Requirements: pip install pillow imagehash numpy pandas scikit-learn
 """
 
 import argparse
