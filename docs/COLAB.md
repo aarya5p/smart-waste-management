@@ -79,13 +79,12 @@ curl -L -o data/dataset-resized.zip \
    - `DRIVE_TRASHNET` - the zip (or folder) on Drive
    - `DRIVE_OUTPUT_DIR` - where result zips are written
    - `EPOCHS`, `BATCH_SIZE`, `NUM_WORKERS`, `EVAL_SPLITS`
-4. Edit the `CONFIGS` cell to choose what to run. Default is a single run:
-   ```python
-   CONFIGS = [{"model": "mobilenet_v2", "mode": "frozen", "seed": 42}]
-   ```
-   The cell also contains a commented-out full Phase 3 sweep (5 models × 3 seeds, frozen)
-   and a fine-tuned subset.
-5. **Runtime → Run all.** Watch the training output stream in cell 15.
+4. The `CONFIGS` cell is set to the **Phase 3 frozen sweep**: 5 models × seeds 42, 56, 99 =
+   15 runs, minus `mobilenet_v2` seed 42 (already imported, listed in `ALREADY_DONE`) = 14 runs.
+   Order is seed-major (all seed-42 runs, then 56, then 99), so a partial sweep still covers
+   every model. Edit `MODELS`, `SEEDS` or `ALREADY_DONE` to change it; a commented-out
+   fine-tune block is there for later (pick those models from **val** results).
+5. **Runtime → Run all.** Watch the training output stream in the run cell (cell 15).
 
 Each config trains once and is then evaluated on **both splits**, writing to:
 
@@ -102,18 +101,52 @@ prints `val_acc`, `val_macro_f1`, `test_acc`, `test_macro_f1` per run.
 
 ## 3. Getting the results back
 
-The last cell zips `runs/`, `results/`, `LOG.md` and `pip_freeze_colab.txt` into
-`waste_results_<timestamp>.zip` and copies it to `DRIVE_OUTPUT_DIR`.
+**Every finished run is saved to Drive immediately**, under `DRIVE_SWEEP_DIR`
+(default `MyDrive/minor_project/sweep/`):
 
-After downloading it to your laptop:
+```
+sweep/<run_name>/
+    runs/<run_name>/       best.pt, history.json, config.json
+    results/<run_name>/    val/ and test/ metrics, confusion matrix, predictions
+    log_rows.md            the LOG.md rows this run appended (train + 2 eval)
+    DONE                   written last; marks the run as complete
+```
 
-1. **Copy the new `LOG.md` rows** from the zip into the repo's `LOG.md` and commit them.
-   The scripts append a row per run (rule 6), but that happens on the Colab VM - which is
-   wiped when the session ends. This is a manual merge step; don't skip it.
-2. **Commit `results/`** (metrics, confusion matrices, predictions) - these are the report
-   artifacts.
-3. **Keep `runs/` locally** if you need the checkpoints for export or Grad-CAM. It stays
-   gitignored (checkpoints are too big for git).
+The last notebook cell bundles **all** finished runs on Drive into one
+`waste_results_<timestamp>.zip` in `DRIVE_OUTPUT_DIR` (with `LOG_rows.md` = every run's rows, and
+`pip_freeze_colab.txt`). It is safe to run on a partial sweep, as often as you like.
+
+After downloading the zip to your laptop:
+
+1. **Unzip `runs/` and `results/` into the repo.**
+2. **Append `LOG_rows.md` to the repo's `LOG.md`** (same 12-column table; skip rows already
+   there, e.g. the imported mobilenet_v2 seed 42). The Colab VM's LOG.md vanishes with the
+   session, so don't skip this (rule 6).
+3. **Run the summary** and commit `results/`:
+   ```bash
+   python src/summarize_results.py          # frozen runs -> results/summary_frozen.csv + .md
+   ```
+   It reads every `results/*/val|test/metrics.json`, and gives mean ± std (sample std, over
+   seeds) of accuracy and macro F1 per model, val and test as separate tables, models ordered
+   by val macro F1. Rows with fewer than 3 seeds are marked ⚠ (provisional).
+4. **Keep `runs/` locally** for export / Grad-CAM; it stays gitignored.
+
+### Resuming after a disconnect
+
+The VM and its local files are gone, but everything finished is on Drive.
+
+1. Reconnect (set the GPU runtime again if needed) and **re-run the notebook from the top**:
+   config → mount Drive → clone/install → copy data → CONFIGS → run cell.
+2. The run cell checks `sweep/<run_name>/DONE` for each config and prints
+   `already on Drive - SKIPPED` for finished ones, then continues with the first unfinished run.
+3. Only the run that was in progress at the moment of the disconnect is lost and restarted from
+   scratch (training is not checkpointed mid-run; each run is only a few minutes).
+4. A half-copied run can't be mistaken for a finished one: it is copied to `<run_name>.partial`
+   and renamed with `DONE` written last. Stale `.partial` folders are overwritten on the retry.
+5. A run that *crashes* (e.g. out of memory) doesn't stop the sweep; it is listed at the end as
+   failed. Fix the cause and re-run the cell to retry just those.
+
+To force a re-run of a finished config, delete its folder under `sweep/`.
 
 ---
 
@@ -172,10 +205,9 @@ re-running it is cheap.
 
 ### Session limits
 
-Colab disconnects idle sessions and caps session length. A single frozen MobileNetV2 run is
-quick, but the full 15-run Phase 3 sweep may not fit in one session - run it in chunks by
-editing `CONFIGS`, and save a result zip each time (filenames are timestamped, so they don't
-overwrite each other).
+Colab disconnects idle sessions and caps session length. The sweep is built for that: results
+are saved per run and finished runs are skipped on restart (see "Resuming after a disconnect"),
+so just reconnect and re-run. Keep the browser tab open while it trains.
 
 ### Private repo
 

@@ -64,6 +64,13 @@ is evaluated on real-world images, and runs on a Raspberry Pi that indicates the
 
 ## Current status
 (update this section as phases finish)
+- Phase 3: prepared, not yet run. notebooks/colab_train_classifier.ipynb now runs the frozen sweep
+  (5 models x seeds 42/56/99, seed-major order, mobilenet_v2 seed 42 skipped = 14 runs) and is
+  resumable: each finished run is copied to Drive (MyDrive/minor_project/sweep/<run>/) with a DONE
+  marker and finished runs are skipped on restart (see docs/COLAB.md). src/summarize_results.py
+  -> results/summary_frozen.csv/.md (mean/std over seeds, val and test separate). Next: push the
+  updated notebook, run the sweep on Colab, import results + LOG rows, run summarize_results.py,
+  then choose the 2-3 models to fine-tune from VAL results only.
 - Phase 2: done. src/train_classifier.py and src/evaluate.py written; MobileNetV2 frozen seed 42
   trained on Colab and imported (runs/ + results/mobilenet_v2_frozen_seed42/): val acc 82.4% /
   macro F1 0.801, test acc 81.1% / macro F1 0.784. LOG.md table now has 12 columns
