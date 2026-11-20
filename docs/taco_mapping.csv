@@ -1,0 +1,61 @@
+taco_category,supercategory,annotation_count,mapped_class,ambiguous,reason
+Battery,Battery,2,EXCLUDE,no,Hazardous/e-waste; belongs in none of the 6 bins and must not be put in a normal one.
+Other carton,Carton,93,cardboard,yes,Unspecified carton: could be cardboard or composite drink-type carton; suggest cardboard.
+Corrugated carton,Carton,64,cardboard,no,Corrugated cardboard.
+Meal carton,Carton,30,cardboard,yes,"Takeaway food box; cardboard but often food-soiled. Suggest cardboard, alternative trash."
+Egg carton,Carton,11,cardboard,no,Moulded pulp/cardboard.
+Toilet tube,Carton,5,cardboard,no,Cardboard tube.
+Pizza box,Carton,3,cardboard,yes,"Cardboard but grease-soiled; suggest cardboard, alternative trash."
+Broken glass,Broken glass,138,glass,no,"Glass shards (only 15 images, mostly one scene type)."
+Glass bottle,Bottle,104,glass,no,Glass bottle.
+Glass cup,Cup,6,glass,no,Glass drinking vessel.
+Glass jar,Glass jar,6,glass,no,Glass jar.
+Drink can,Can,229,metal,no,Aluminium/steel can.
+Pop tab,Pop tab,99,metal,no,Aluminium ring-pull tab.
+Metal bottle cap,Bottle cap,80,metal,no,Metal crown/screw cap.
+Aluminium foil,Aluminium foil,62,metal,no,Aluminium foil (crumpled foil resembles TrashNet metal).
+Food Can,Can,34,metal,no,Steel food can.
+Scrap metal,Scrap metal,20,metal,no,Metal scrap.
+Aerosol,Can,10,metal,no,Metal aerosol can.
+Metal lid,Lid,10,metal,no,Metal lid.
+Aluminium blister pack,Blister pack,6,metal,yes,"Foil + plastic composite; suggest metal, alternative trash."
+Normal paper,Paper,82,paper,no,Plain paper.
+Paper bag,Paper bag,27,paper,no,Paper bag.
+Magazine paper,Paper,12,paper,no,Magazine/glossy paper.
+Wrapping paper,Paper,12,paper,no,"Wrapping paper (may be laminated, still paper-like)."
+Paper straw,Straw,4,paper,no,Paper straw.
+Plastified paper bag,Paper bag,0,paper,yes,Plastic-coated paper; suggest paper. 0 annotations in this data.
+Plastic film,Plastic bag & wrapper,451,plastic,no,Soft plastic film; classified by material. Often not curbside-recyclable but still plastic.
+Clear plastic bottle,Bottle,285,plastic,no,PET bottle.
+Other plastic,Other plastic,273,plastic,no,Generic plastic item.
+Other plastic wrapper,Plastic bag & wrapper,260,plastic,no,Plastic wrapper.
+Plastic bottle cap,Bottle cap,209,plastic,no,Plastic cap.
+Plastic straw,Straw,157,plastic,no,Plastic straw.
+Disposable plastic cup,Cup,104,plastic,no,Plastic cup.
+Plastic lid,Lid,77,plastic,no,Plastic lid.
+Single-use carrier bag,Plastic bag & wrapper,61,plastic,no,Plastic carrier bag.
+Other plastic bottle,Bottle,50,plastic,no,Plastic bottle (non-clear).
+Disposable food container,Plastic container,38,plastic,no,Mostly plastic clamshells/trays; foam ones are a separate category.
+Plastic utensils,Plastic utensils,37,plastic,no,Plastic cutlery.
+Garbage bag,Plastic bag & wrapper,31,plastic,no,Plastic bag by material.
+Spread tub,Plastic container,9,plastic,no,Plastic tub.
+Squeezable tube,Squeezable tube,7,plastic,yes,Plastic or laminate/metal tube; suggest plastic.
+Other plastic container,Plastic container,6,plastic,no,Plastic container.
+Six pack rings,Plastic bag & wrapper,5,plastic,no,Plastic rings.
+Plastic glooves,Plastic glooves,4,plastic,yes,"Gloves (TACO's spelling) - latex/nitrile/PE; suggest plastic, alternative trash."
+Tupperware,Plastic container,4,plastic,no,Plastic container.
+Polypropylene bag,Plastic bag & wrapper,3,plastic,no,Plastic bag.
+Other plastic cup,Cup,2,plastic,no,Plastic cup.
+Cigarette,Cigarette,667,trash,no,"Cigarette butts: general waste, none of the material classes. Tiny objects, hard to detect."
+Unlabeled litter,Unlabeled litter,517,trash,yes,Material unknown by definition; catch-all litter. Trash is the safe bin.
+Styrofoam piece,Styrofoam piece,112,trash,yes,"Expanded polystyrene is not recycled in practice; suggest trash, alternative plastic."
+Paper cup,Cup,67,trash,yes,"Plastic-lined (PE), usually not recyclable; looks like paper. Suggest trash, alternative paper."
+Drink carton,Carton,45,trash,yes,"Tetra-Pak style multi-layer composite; looks like cardboard but is not recycled with it in most places. Suggest trash, alternative cardboard. Bin policy call."
+Tissues,Paper,42,trash,yes,"Used tissues are not recyclable though they look like paper. Suggest trash, alternative paper."
+Crisp packet,Plastic bag & wrapper,39,trash,yes,"Metallised multi-layer film; not recyclable. Suggest trash, alternative plastic."
+Rope & strings,Rope & strings,29,trash,yes,Fibre/plastic cord; no matching material class. Suggest trash.
+Foam food container,Plastic container,15,trash,yes,"Polystyrene foam; same reasoning as styrofoam. Suggest trash, alternative plastic."
+Foam cup,Cup,13,trash,yes,"Polystyrene foam; same reasoning as styrofoam. Suggest trash, alternative plastic."
+Food waste,Food waste,8,trash,yes,"Organic waste, no material class. Suggest trash (or EXCLUDE; only 8 annotations)."
+Shoe,Shoe,7,trash,no,Mixed-material item; general waste.
+Carded blister pack,Blister pack,1,trash,yes,Card + plastic composite; suggest trash. Only 1 annotation.

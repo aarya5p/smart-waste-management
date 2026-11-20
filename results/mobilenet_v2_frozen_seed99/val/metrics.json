@@ -1,0 +1,152 @@
+{
+  "run_name": "mobilenet_v2_frozen_seed99",
+  "model": "mobilenet_v2",
+  "mode": "frozen",
+  "seed": 99,
+  "checkpoint": "runs/mobilenet_v2_frozen_seed99/best.pt",
+  "trained_epoch": 22,
+  "csv": "splits/val.csv",
+  "n_images": 374,
+  "device": "cuda",
+  "evaluated_at": "2026-11-20T09:28:56",
+  "smoke_test": false,
+  "accuracy": 0.8422459893048129,
+  "macro_precision": 0.8191033820935781,
+  "macro_recall": 0.8342873677870161,
+  "macro_f1": 0.8224796770414545,
+  "weighted_f1": 0.844415397142694,
+  "per_class": {
+    "cardboard": {
+      "precision": 0.9629629629629629,
+      "recall": 0.8666666666666667,
+      "f1-score": 0.9122807017543859,
+      "support": 60.0
+    },
+    "glass": {
+      "precision": 0.8194444444444444,
+      "recall": 0.7866666666666666,
+      "f1-score": 0.8027210884353742,
+      "support": 75.0
+    },
+    "metal": {
+      "precision": 0.7777777777777778,
+      "recall": 0.9180327868852459,
+      "f1-score": 0.8421052631578947,
+      "support": 61.0
+    },
+    "paper": {
+      "precision": 0.8941176470588236,
+      "recall": 0.8837209302325582,
+      "f1-score": 0.8888888888888888,
+      "support": 86.0
+    },
+    "plastic": {
+      "precision": 0.8888888888888888,
+      "recall": 0.7887323943661971,
+      "f1-score": 0.835820895522388,
+      "support": 71.0
+    },
+    "trash": {
+      "precision": 0.5714285714285714,
+      "recall": 0.7619047619047619,
+      "f1-score": 0.6530612244897959,
+      "support": 21.0
+    },
+    "accuracy": 0.8422459893048129,
+    "macro avg": {
+      "precision": 0.8191033820935781,
+      "recall": 0.8342873677870161,
+      "f1-score": 0.8224796770414545,
+      "support": 374.0
+    },
+    "weighted avg": {
+      "precision": 0.852101027576806,
+      "recall": 0.8422459893048129,
+      "f1-score": 0.844415397142694,
+      "support": 374.0
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "cardboard",
+      "glass",
+      "metal",
+      "paper",
+      "plastic",
+      "trash"
+    ],
+    "matrix": [
+      [
+        52,
+        1,
+        2,
+        5,
+        0,
+        0
+      ],
+      [
+        0,
+        59,
+        8,
+        0,
+        7,
+        1
+      ],
+      [
+        0,
+        3,
+        56,
+        0,
+        0,
+        2
+      ],
+      [
+        1,
+        0,
+        3,
+        76,
+        0,
+        6
+      ],
+      [
+        0,
+        9,
+        1,
+        2,
+        56,
+        3
+      ],
+      [
+        1,
+        0,
+        2,
+        2,
+        0,
+        16
+      ]
+    ]
+  },
+  "efficiency": {
+    "params_total": 2231558,
+    "params_trainable_during_training": 7686,
+    "checkpoint_mb": 8.73005199432373,
+    "gmacs": 0.312920896,
+    "gflops_2x_macs": 0.625841792,
+    "flops_note": "fvcore FlopCountAnalysis: multiply-accumulate ops (MACs), batch 1",
+    "peak_process_ram_mb": 1514.06640625,
+    "ram_note": "peak RSS of the whole evaluation process on cuda",
+    "latency": {
+      "median_ms": 5.028309499948591,
+      "mean_ms": 5.6070359800037295,
+      "p95_ms": 9.066720099963277,
+      "batch_size": 1,
+      "warmup_runs": 20,
+      "timed_runs": 100,
+      "device": "cuda",
+      "machine": "Linux x86_64",
+      "measured_on_raspberry_pi": false,
+      "counts_for_report": false,
+      "note": "LAPTOP/DEV MACHINE measurement - label as such, NOT a valid Pi latency (rule 8)."
+    }
+  }
+}
