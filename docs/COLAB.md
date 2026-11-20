@@ -79,12 +79,21 @@ curl -L -o data/dataset-resized.zip \
    - `DRIVE_TRASHNET` - the zip (or folder) on Drive
    - `DRIVE_OUTPUT_DIR` - where result zips are written
    - `EPOCHS`, `BATCH_SIZE`, `NUM_WORKERS`, `EVAL_SPLITS`
-4. The `CONFIGS` cell is set to the **Phase 3 frozen sweep**: 5 models × seeds 42, 56, 99 =
-   15 runs, minus `mobilenet_v2` seed 42 (already imported, listed in `ALREADY_DONE`) = 14 runs.
-   Order is seed-major (all seed-42 runs, then 56, then 99), so a partial sweep still covers
-   every model. Edit `MODELS`, `SEEDS` or `ALREADY_DONE` to change it; a commented-out
-   fine-tune block is there for later (pick those models from **val** results).
-5. **Runtime → Run all.** Watch the training output stream in the run cell (cell 15).
+4. **Before Run all, make sure the freezing fix is pushed** (`src/train_classifier.py` with
+   `FREEZE_POLICY = "frozen_parts_eval"`, and `src/test_freezing.py`). The clone cell refuses to
+   continue without it, and a unit-test cell runs `test_freezing.py` (about 1 min) before any
+   training; the sweep only starts if it prints `ALL PASSED`.
+5. Two switches in the config cell choose what runs:
+   - `RUN_FROZEN = False` (current): the frozen sweep is **not** re-run. The official frozen
+     results are the existing runs in the repo (`freeze_policy = bn_adapted`, see CLAUDE.md
+     "Limitations for the report"). `True` would re-run all 15 with the fixed code.
+   - `RUN_FINETUNE = True` (current): **3 fine-tune runs**, `convnext_tiny`, `mobilenet_v2`,
+     `mobilenet_v3_large`, **seed 42 only** (`FINETUNE_SEEDS`), max 50 epochs, patience 7, head lr
+     1e-4, unfrozen-backbone lr 1e-5. Add 56 and 99 to `FINETUNE_SEEDS` later to complete rule 5;
+     finished runs are skipped.
+
+   Rough time on a T4: about 10-20 min per fine-tune run.
+6. **Runtime → Run all.** Watch the training output stream in the run cell.
 
 Each config trains once and is then evaluated on **both splits**, writing to:
 
@@ -110,6 +119,7 @@ sweep/<run_name>/
     results/<run_name>/    val/ and test/ metrics, confusion matrix, predictions
     log_rows.md            the LOG.md rows this run appended (train + 2 eval)
     DONE                   written last; marks the run as complete
+sweep/_superseded/<run_name>_<timestamp>/   an older Drive copy that was replaced (see below)
 ```
 
 The last notebook cell bundles **all** finished runs on Drive into one
@@ -119,16 +129,22 @@ The last notebook cell bundles **all** finished runs on Drive into one
 After downloading the zip to your laptop:
 
 1. **Unzip `runs/` and `results/` into the repo.**
-2. **Append `LOG_rows.md` to the repo's `LOG.md`** (same 12-column table; skip rows already
-   there, e.g. the imported mobilenet_v2 seed 42). The Colab VM's LOG.md vanishes with the
-   session, so don't skip this (rule 6).
+2. **Append `LOG_rows.md` to the repo's `LOG.md`** (same 12-column table; skip exact duplicate
+   rows). The Settings column ends in `bn_adapted` (frozen runs, pre-fix code) or
+   `frozen_parts_eval` (fixed code), so rows for the same run name from different code versions
+   can be told apart. The Colab VM's LOG.md vanishes with the session, so don't skip this (rule 6).
 3. **Run the summary** and commit `results/`:
    ```bash
-   python src/summarize_results.py          # frozen runs -> results/summary_frozen.csv + .md
+   python src/summarize_results.py
    ```
-   It reads every `results/*/val|test/metrics.json`, and gives mean ± std (sample std, over
-   seeds) of accuracy and macro F1 per model, val and test as separate tables, models ordered
-   by val macro F1. Rows with fewer than 3 seeds are marked ⚠ (provisional).
+   It reads every `results/*/val|test/metrics.json` and writes, in `results/`:
+   - `summary_frozen` and `summary_finetune` (.csv + .md): mean ± std (sample std over seeds) of
+     accuracy and macro F1 per model, val and test as separate tables, ordered by val macro F1
+   - `summary_frozen_vs_finetune`: per model, frozen vs fine-tuned side by side, with the change
+   - each table shows the freeze policy (`bn_adapted` / `frozen_parts_eval`, read from
+     `runs/<run>/config.json`), and the frozen-vs-finetune table adds a caveat when they differ
+
+   Rows with fewer than 3 seeds are marked ⚠ (provisional).
 4. **Keep `runs/` locally** for export / Grad-CAM; it stays gitignored.
 
 ### Resuming after a disconnect
@@ -137,8 +153,10 @@ The VM and its local files are gone, but everything finished is on Drive.
 
 1. Reconnect (set the GPU runtime again if needed) and **re-run the notebook from the top**:
    config → mount Drive → clone/install → copy data → CONFIGS → run cell.
-2. The run cell checks `sweep/<run_name>/DONE` for each config and prints
-   `already on Drive - SKIPPED` for finished ones, then continues with the first unfinished run.
+2. The run cell checks each config against Drive. It is skipped (`already on Drive - SKIPPED`)
+   only if `sweep/<run_name>/DONE` exists **and** the saved `config.json` has the same max
+   epochs, patience, learning rate and `freeze_policy` as requested now. Then the cell continues
+   with the first unfinished run.
 3. Only the run that was in progress at the moment of the disconnect is lost and restarted from
    scratch (training is not checkpointed mid-run; each run is only a few minutes).
 4. A half-copied run can't be mistaken for a finished one: it is copied to `<run_name>.partial`
@@ -146,7 +164,10 @@ The VM and its local files are gone, but everything finished is on Drive.
 5. A run that *crashes* (e.g. out of memory) doesn't stop the sweep; it is listed at the end as
    failed. Fix the cause and re-run the cell to retry just those.
 
-To force a re-run of a finished config, delete its folder under `sweep/`.
+A Drive folder trained under *different* settings (for example the original BN-adapted frozen
+runs, which have no `freeze_policy` and a 30-epoch cap) does not count as done: the run is
+redone, and the old folder is **moved** to `sweep/_superseded/<run_name>_<timestamp>/` rather than
+deleted. To force a re-run of a finished config, move its folder out of `sweep/`.
 
 ---
 
@@ -214,3 +235,66 @@ so just reconnect and re-run. Keep the browser tab open while it trains.
 If the repo is private, set `REPO_IS_PRIVATE = True`. The notebook prompts for a GitHub
 personal access token with `getpass` (not printed, not stored in the notebook), uses it only
 to build the clone URL, and deletes that URL from memory afterwards.
+
+---
+
+## 5. YOLO detector on TACO (`notebooks/colab_train_yolo.ipynb`)
+
+Trains **yolo11n** (COCO-pretrained) on two TACO datasets, one after the other: `taco_yolo_6class`
+(the 6 TrashNet classes) and `taco_yolo_1class` (every box = `waste`). Same images, same split.
+Settings: imgsz 640, max 100 epochs, early-stopping patience 20 (on **val**), seed 42, batch 16.
+Each finished model is evaluated on **val and test** with `src/evaluate_yolo.py`
+(mAP@0.5, mAP@0.5:0.95, per-class AP).
+
+### a) One-time setup
+
+1. On the laptop, build the datasets and the Drive zip (already done once; re-running is safe -
+   it reads the committed split instead of making a new one):
+   ```bash
+   python src/taco_to_yolo.py --zip      # -> data/processed/taco_yolo.zip (~960 MB)
+   ```
+2. Upload `data/processed/taco_yolo.zip` to `MyDrive/minor_project/taco_yolo.zip`.
+   It contains the 6-class dataset complete plus only the *labels* of the 1-class dataset; the
+   images are identical, so the notebook recreates them with hard links instead of uploading twice.
+3. Commit and push `src/train_yolo.py`, `src/evaluate_yolo.py`, `src/taco_to_yolo.py` and
+   `splits/taco_*.txt` - the notebook checks for them after cloning.
+
+### b) Running
+
+Open the notebook, set a **T4 GPU** runtime, **Run all**. The data cell unzips to `/content/datasets/`
+and verifies every image against `splits/taco_*.txt` before anything trains.
+
+Where things go on Drive (`MyDrive/minor_project/yolo/`):
+
+```
+train/<run_name>/      Ultralytics run folder, written DURING training: weights/last.pt + best.pt,
+                       results.csv, plots, args.yaml, train_done.json, log_row_train.md
+store/<run_name>/      after evaluation: results/<run_name>/val|test/ + log_rows.md + DONE
+```
+
+Run names: `yolo11n_taco6_seed42`, `yolo11n_taco1_seed42`. Rough time on a T4: ~1 h per model
+if it runs all 100 epochs (often less with early stopping).
+
+### c) Resuming after a disconnect
+
+Training writes its checkpoint to Drive every epoch, so very little is lost. Reconnect, set the GPU
+runtime and **Run all** again:
+
+- a model with `store/<run_name>/DONE` is skipped;
+- a model whose `train/<run_name>/weights/last.pt` exists but has no `train_done.json` **resumes
+  from its last finished epoch** (Ultralytics `resume=True`, original settings);
+- a model with `train_done.json` but no `DONE` (session died during evaluation) skips training and
+  just re-runs the evaluation.
+
+To retrain a model from scratch, move its `train/<run_name>/` and `store/<run_name>/` folders away.
+
+### d) Getting the results back
+
+The last cell writes `waste_yolo_results_<timestamp>.zip` to `outputs/` with `runs/yolo/<run>/`,
+`results/<run>/val|test/`, `LOG_rows.md` and `pip_freeze_colab_yolo.txt`. Unzip `runs/` and
+`results/` into the repo, append `LOG_rows.md` to `LOG.md` (drop exact duplicates only), commit
+`results/`.
+
+**Rule 2:** the choice of detector for the two-stage system is made from the **val** mAP only.
+**Rule 8:** the speed numbers in `metrics.json` are Colab GPU timings, not Pi latency.
+

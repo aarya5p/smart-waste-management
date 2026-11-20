@@ -114,7 +114,8 @@ MODEL_REGISTRY = {
         "ctor": models.mobilenet_v3_large,
         "head": lambda m: ("classifier.3", m.classifier[3]),
         "set_head": lambda m, layer: m.classifier.__setitem__(3, layer),
-        "finetune_blocks": lambda m: [m.features[-4:]],
+        # last stage + the pretrained 960->1280 pre-logits layer that sits between it and the head
+        "finetune_blocks": lambda m: [m.features[-4:], m.classifier[0]],
     },
     "efficientnet_b0": {
         "ctor": models.efficientnet_b0,
@@ -132,9 +133,43 @@ MODEL_REGISTRY = {
         "ctor": models.convnext_tiny,
         "head": lambda m: ("classifier.2", m.classifier[2]),
         "set_head": lambda m, layer: m.classifier.__setitem__(2, layer),
-        "finetune_blocks": lambda m: [m.features[-2:]],
+        # last downsampling layer + last stage + the final LayerNorm just before the head
+        "finetune_blocks": lambda m: [m.features[-2:], m.classifier[0]],
     },
 }
+
+# Recorded in config.json and LOG.md so runs made under the old behaviour can be told apart.
+# "frozen_parts_eval": during training, every frozen part of the network is kept in eval mode
+# (BatchNorm running stats stay at their ImageNet values, stochastic depth/dropout inside the
+# frozen backbone are off). Only the head block and the unfrozen blocks run in train mode.
+FREEZE_POLICY = "frozen_parts_eval"
+
+
+def head_block(model_name: str, model):
+    """The container holding the head (e.g. model.classifier, or model.fc for ResNet).
+    Kept in train mode during training so its Dropout regularises the head. It holds no
+    BatchNorm and no stochastic depth, so this changes nothing in the backbone."""
+    return model.fc if model_name == "resnet50" else model.classifier
+
+
+def set_train_mode(model, train_modules):
+    """Training-time mode switch. model.train() alone would put EVERY layer in train mode,
+    including frozen ones, and frozen BatchNorm layers would then keep updating their running
+    mean/var (requires_grad=False does not stop that). So: everything eval, then only the
+    modules that are actually being trained go back to train mode."""
+    model.eval()
+    for m in train_modules:
+        m.train()
+
+
+def make_optimizer(mode, lr, backbone_lr_mult, head_module, backbone_blocks):
+    """Adam; in finetune mode the pretrained backbone blocks get lr * backbone_lr_mult."""
+    head_params = list(head_module.parameters())
+    groups = [{"params": head_params, "lr": lr}]
+    if mode == "finetune":
+        backbone_params = [p for b in backbone_blocks for p in b.parameters() if p.requires_grad]
+        groups.append({"params": backbone_params, "lr": lr * backbone_lr_mult})
+    return torch.optim.Adam(groups)
 
 
 def build_model(model_name: str, mode: str, num_classes: int = len(CLASSES), pretrained: bool = True):
@@ -173,10 +208,17 @@ def build_model(model_name: str, mode: str, num_classes: int = len(CLASSES), pre
 
 
 # ---------------------------------------------------------------- train / eval loops
-def run_epoch(model, loader, criterion, device, optimizer=None, limit_batches=0):
-    """One pass over loader. Training if optimizer is given, else evaluation."""
+def run_epoch(model, loader, criterion, device, optimizer=None, limit_batches=0, train_modules=None):
+    """One pass over loader. Training if optimizer is given, else evaluation.
+    train_modules: the modules allowed in train mode while training (head block + unfrozen
+    blocks); everything else stays in eval mode. Required when training."""
     is_train = optimizer is not None
-    model.train(is_train)
+    if is_train:
+        if train_modules is None:
+            raise ValueError("train_modules is required when training (see set_train_mode)")
+        set_train_mode(model, train_modules)
+    else:
+        model.eval()
 
     total_loss, correct, seen = 0.0, 0, 0
     with torch.set_grad_enabled(is_train):
@@ -291,19 +333,13 @@ def main():
     print("class weights: " + ", ".join(f"{c}={w:.3f}" for c, w in zip(CLASSES, weights.tolist())))
 
     # ---- optimizer: finetune uses a lower lr for the pretrained backbone
-    head_params = list(head_module.parameters())
-    if args.mode == "finetune":
-        backbone_params = [p for b in backbone_blocks for p in b.parameters() if p.requires_grad]
-        param_groups = [
-            {"params": head_params, "lr": args.lr},
-            {"params": backbone_params, "lr": args.lr * args.backbone_lr_mult},
-        ]
-    else:
-        param_groups = [{"params": head_params, "lr": args.lr}]
-    optimizer = torch.optim.Adam(param_groups)
+    optimizer = make_optimizer(args.mode, args.lr, args.backbone_lr_mult, head_module, backbone_blocks)
+    # Only these run in train mode while training; all frozen parts stay in eval mode.
+    train_modules = [head_block(args.model, model), *backbone_blocks]
 
     config = {
-        **vars(args), "run_name": run_name, "device": str(device), "classes": CLASSES,
+        **vars(args), "freeze_policy": FREEZE_POLICY,
+        "run_name": run_name, "device": str(device), "classes": CLASSES,
         "params_total": n_total, "params_trainable": n_train,
         "class_weights": dict(zip(CLASSES, weights.tolist())), "smoke_test": smoke,
     }
@@ -316,7 +352,8 @@ def main():
     for epoch in range(1, args.epochs + 1):
         t0 = time.time()
         tr_loss, tr_acc, _ = run_epoch(model, train_loader, criterion, device,
-                                       optimizer=optimizer, limit_batches=args.limit_batches)
+                                       optimizer=optimizer, limit_batches=args.limit_batches,
+                                       train_modules=train_modules)
         va_loss, va_acc, _ = run_epoch(model, val_loader, criterion, device,
                                        limit_batches=args.limit_batches)
         dt = time.time() - t0
@@ -360,7 +397,9 @@ def main():
         print("Smoke test: LOG.md not updated.")
     else:
         settings = (f"{args.mode}, {args.epochs}ep(max), bs{args.batch_size}, lr{args.lr:g}, "
-                    f"img{args.img_size}, Adam, class-weighted CE, early-stop p{args.patience}")
+                    f"img{args.img_size}, Adam, class-weighted CE, early-stop p{args.patience}, "
+                    f"{FREEZE_POLICY}"
+                    + (f", backbone lr x{args.backbone_lr_mult:g}" if args.mode == "finetune" else ""))
         append_log_row(
             Path(args.log_file), date=datetime.now().strftime("%Y-%m-%d"), run=run_name,
             type="train", model=args.model, mode=args.mode, split="val", seed=args.seed,

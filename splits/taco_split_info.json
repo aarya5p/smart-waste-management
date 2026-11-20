@@ -1,0 +1,110 @@
+{
+  "seed_used": 158,
+  "selection": {
+    "criterion": "minimise the largest absolute deviation, over all 6 classes, of each class's val share and test share (boxes in split / boxes of that class) from 15%",
+    "constraint": "every class >= 10 boxes in val and in test",
+    "seeds_tried": [
+      0,
+      999
+    ],
+    "n_seeds_meeting_constraint": 959,
+    "best_max_deviation": 0.0272,
+    "median_max_deviation_over_eligible_seeds": 0.0909,
+    "uses": "label counts only - chosen before any model was trained (rule 2)",
+    "superseded": "an earlier split with seed 42 (max deviation 0.1295; glass val/test 17/71 boxes) was replaced by this one on 2026-11-20, before any training"
+  },
+  "per_class": {
+    "cardboard": {
+      "train": 142,
+      "val": 34,
+      "test": 30,
+      "total": 206,
+      "train_share": 0.6893,
+      "val_share": 0.165,
+      "test_share": 0.1456
+    },
+    "glass": {
+      "train": 173,
+      "val": 45,
+      "test": 36,
+      "total": 254,
+      "train_share": 0.6811,
+      "val_share": 0.1772,
+      "test_share": 0.1417
+    },
+    "metal": {
+      "train": 393,
+      "val": 71,
+      "test": 84,
+      "total": 548,
+      "train_share": 0.7172,
+      "val_share": 0.1296,
+      "test_share": 0.1533
+    },
+    "paper": {
+      "train": 99,
+      "val": 20,
+      "test": 18,
+      "total": 137,
+      "train_share": 0.7226,
+      "val_share": 0.146,
+      "test_share": 0.1314
+    },
+    "plastic": {
+      "train": 1446,
+      "val": 350,
+      "test": 273,
+      "total": 2069,
+      "train_share": 0.6989,
+      "val_share": 0.1692,
+      "test_share": 0.1319
+    },
+    "trash": {
+      "train": 1077,
+      "val": 231,
+      "test": 254,
+      "total": 1562,
+      "train_share": 0.6895,
+      "val_share": 0.1479,
+      "test_share": 0.1626
+    },
+    "_images": {
+      "train": 1049,
+      "val": 225,
+      "test": 224
+    }
+  },
+  "fractions": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "unit": "image (near-duplicate groups kept together)",
+  "phash_threshold": 5,
+  "near_duplicate_pairs": [
+    [
+      "batch_6/000019.JPG",
+      "batch_6/000047.JPG",
+      0
+    ],
+    [
+      "batch_6/000069.JPG",
+      "batch_6/000100.JPG",
+      4
+    ],
+    [
+      "batch_7/000000.JPG",
+      "batch_8/000005.jpg",
+      0
+    ]
+  ],
+  "images_in_annotations": 1500,
+  "images_dropped_exclude": [
+    "batch_1/000104.JPG",
+    "batch_13/000055.jpg"
+  ],
+  "images_without_boxes_after_mapping": [],
+  "boxes_clipped_to_image": 7,
+  "boxes_dropped_degenerate": 0,
+  "frozen": "do not re-split; src/taco_to_yolo.py reads these files unless --resplit is given"
+}
