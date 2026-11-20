@@ -201,15 +201,25 @@ def run_epoch(model, loader, criterion, device, optimizer=None, limit_batches=0)
 
 
 # ---------------------------------------------------------------- logging
-def append_log_row(log_path: Path, date, model, settings, seed, accuracy, macro_f1, notes):
-    """Append one row to LOG.md (rule 6), creating the table header if needed."""
+LOG_COLUMNS = ["Date", "Run", "Type", "Model", "Mode", "Split", "Seed", "Accuracy",
+               "Macro F1", "Params", "Settings", "Notes"]
+
+
+def append_log_row(log_path: Path, **row):
+    """Append one row to LOG.md (rule 6). Every row has exactly len(LOG_COLUMNS) cells.
+    Keys are the column names with spaces replaced by underscores (e.g. macro_f1).
+    Cell text must not contain '|'. Same format is used by train_classifier.py and evaluate.py."""
     header = ("# Experiment Log\n\n"
-              "| Date | Model | Settings | Seed | Accuracy | Macro F1 | Notes |\n"
-              "|------|-------|----------|------|----------|----------|-------|\n")
+              "| " + " | ".join(LOG_COLUMNS) + " |\n"
+              "|" + "|".join("---" for _ in LOG_COLUMNS) + "|\n")
     if not log_path.exists():
         log_path.write_text(header)
+    cells = []
+    for col in LOG_COLUMNS:
+        v = str(row.get(col.lower().replace(" ", "_"), "-"))
+        cells.append(v.replace("|", "/").replace("\n", " "))
     with log_path.open("a") as f:
-        f.write(f"| {date} | {model} | {settings} | {seed} | {accuracy} | {macro_f1} | {notes} |\n")
+        f.write("| " + " | ".join(cells) + " |\n")
 
 
 # ---------------------------------------------------------------- main
@@ -352,10 +362,12 @@ def main():
         settings = (f"{args.mode}, {args.epochs}ep(max), bs{args.batch_size}, lr{args.lr:g}, "
                     f"img{args.img_size}, Adam, class-weighted CE, early-stop p{args.patience}")
         append_log_row(
-            Path(args.log_file), datetime.now().strftime("%Y-%m-%d"), args.model, settings,
-            args.seed, f"{best['val_acc']:.4f} (val)", "- (see evaluate.py)",
-            f"train | best epoch {best_epoch}/{len(history)} | val loss {best_val_loss:.4f} "
-            f"| {total_time/60:.1f} min on {device} | {run_name}",
+            Path(args.log_file), date=datetime.now().strftime("%Y-%m-%d"), run=run_name,
+            type="train", model=args.model, mode=args.mode, split="val", seed=args.seed,
+            accuracy=f"{best['val_acc']:.4f}", macro_f1="-",
+            params=f"{n_total:,}", settings=settings,
+            notes=f"best epoch {best_epoch}/{len(history)}; val loss {best_val_loss:.4f}; "
+                  f"{total_time/60:.1f} min on {device}",
         )
         print(f"Appended a row to {args.log_file}")
 

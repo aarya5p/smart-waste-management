@@ -258,12 +258,12 @@ def main():
             f"{lat['median_ms']:.1f} ms/img on {lat['device']}"
             f"{'' if lat['counts_for_report'] else ' (laptop, not for report)'}")
         append_log_row(
-            Path(args.log_file), datetime.now().strftime("%Y-%m-%d"), model_name,
-            f"{mode}, eval on {args.csv}, img{img_size}", ckpt["seed"],
-            f"{acc:.4f}", f"{macro_f1:.4f}",
-            f"eval | macro P {macro_p:.4f} R {macro_r:.4f} | params {n_total:,} | "
-            f"ckpt {efficiency['checkpoint_mb']:.2f} MB | "
-            f"GMACs {gmacs if gmacs is None else round(gmacs, 2)} | {lat_txt} | {run_name}",
+            Path(args.log_file), date=datetime.now().strftime("%Y-%m-%d"), run=run_name,
+            type="eval", model=model_name, mode=mode, split=Path(args.csv).stem, seed=ckpt["seed"],
+            accuracy=f"{acc:.4f}", macro_f1=f"{macro_f1:.4f}", params=f"{n_total:,}",
+            settings=f"eval on {args.csv}, img{img_size}",
+            notes=f"macro P {macro_p:.4f}, R {macro_r:.4f}; ckpt {efficiency['checkpoint_mb']:.2f} MB; "
+                  f"GMACs {gmacs if gmacs is None else round(gmacs, 2)}; {lat_txt}",
         )
         print(f"Appended a row to {args.log_file}")
 

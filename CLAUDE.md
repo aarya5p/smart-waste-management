@@ -64,8 +64,11 @@ is evaluated on real-world images, and runs on a Raspberry Pi that indicates the
 
 ## Current status
 (update this section as phases finish)
-- Phase 2: in progress. src/train_classifier.py and src/evaluate.py written and smoke-tested on
-  CPU (all 5 architectures build in both frozen/finetune modes); no real training run yet.
+- Phase 2: done. src/train_classifier.py and src/evaluate.py written; MobileNetV2 frozen seed 42
+  trained on Colab and imported (runs/ + results/mobilenet_v2_frozen_seed42/): val acc 82.4% /
+  macro F1 0.801, test acc 81.1% / macro F1 0.784. LOG.md table now has 12 columns
+  (Date, Run, Type, Model, Mode, Split, Seed, Accuracy, Macro F1, Params, Settings, Notes), written
+  by both scripts. Next: Phase 3 frozen sweep (5 models x seeds 42/56/99).
   notebooks/colab_train_classifier.ipynb + docs/COLAB.md added for GPU training on Colab.
   TACO repo cloned and all 1500 images downloaded (data/raw/taco/, 2.5 GB, 0 corrupt);
   src/taco_categories.py -> docs/taco_categories.csv (60 categories, 4784 annotations).

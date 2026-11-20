@@ -37,9 +37,23 @@ MyDrive/
     └── outputs/                 <- result zips land here (created automatically)
 ```
 
-`dataset-resized.zip` is the file downloaded in Phase 1; its internal layout
-(`dataset-resized/cardboard/...` or `cardboard/...`) does not matter, the notebook finds the
+The zip to upload is **`data/dataset-resized.zip`** in this repo (41 MB, gitignored along with
+the rest of `data/`, so it exists only on your machine). Its internal layout
+(`dataset-resized/cardboard/...` or `cardboard/...`) does not matter - the notebook finds the
 class folders either way.
+
+If it is ever missing, rebuild it from the extracted dataset:
+
+```bash
+cd data/raw/trashnet && zip -r ../../dataset-resized.zip cardboard glass metal paper plastic trash
+```
+
+Or re-download the original from the TrashNet mirror:
+
+```bash
+curl -L -o data/dataset-resized.zip \
+  https://huggingface.co/datasets/garythung/trashnet/resolve/main/dataset-resized.zip
+```
 
 > **Why a zip?** Google Drive is mounted as a network filesystem. Copying 2,527 individual
 > small files through it takes minutes; copying one 43 MB zip and unzipping it locally takes
